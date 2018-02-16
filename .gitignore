@@ -1,0 +1,6 @@
+dist
+__pycache__
+*.egg-info
+*.pyc
+.tox
+.pyclirc
