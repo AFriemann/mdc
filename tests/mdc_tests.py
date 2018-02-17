@@ -2,7 +2,7 @@
 
 import logging
 
-from mdc.logging import with_mdc, MDC, MDCHandler
+from mdc import with_mdc, MDC, MDCHandler
 
 logging.root.addHandler(MDCHandler())
 

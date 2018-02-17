@@ -32,7 +32,7 @@ Add a handler to the root logger or set the base handler with *logging.basicConf
 .. code:: python
 
   >>> import logging
-  >>> from mdc.logging import MDCHandler
+  >>> from mdc import MDCHandler
 
   >>> logging.basicConfig(level=logging.DEBUG, handlers=[MDCHandler()])
 
@@ -66,7 +66,7 @@ You can use the provided decorator or contextmanager to add MDC fields:
 
 .. code:: python
 
-  >>> from mdc.logging import MDC, with_mdc
+  >>> from mdc import MDC, with_mdc
 
   >>> with MDC(foo='bar'):
   ...     logging.warning('foobar')
