@@ -1,0 +1,19 @@
+language: python
+python:
+    - "2.7"
+    - "3.4"
+install:
+    - pip install .
+    - pip install nose rednose git+https://github.com/afriemann/spec
+script:
+    - nosetests --with-doctest --with-specplugin
+# deploy:
+#     - provider: pypi
+#       distributions: sdist
+#       user: afriemann
+#       password:
+#         secure: "Mv/AM9A+nBXlLVOLFLiZcRsGTU53XKCg1ZB7NnMDflygaHUNrZPUedLaFDEqBZHQ/9R04D3BTacp7L6xyuvc47THfMiVR7PTAp+ZndXDFLiZJ5PGProhpuvtNBveS1R90gTGR5gqwNqTd5s3BTcndJteopkjYcanfoV17jmY0v5wU/y6+GuN03U6WFy7FGAQyr7taE1X74mcQyu3xBv3jWP6dFs3JdK+DlIZxx5HastKtlER9L0yRBiKM4nNJqUBgb9Tpaw1fJnjPYpZIDQr6qCuA2xLuuZ9j/fU+HGAaKOAloJfWsc6KTAq0B1BDAOnj03IPmp4AowthaSxJOilvTCvccaciO5R6e3mMYwARelpSbFbDFE8knOHCvQrxGUBDSZUsqt3prXP33r5hZ646TmEM+NNZLGDUnZvaF+2FiXEQFlmLz+1GH10h02rtPjINZlJ1QGn9bCs17R0oFeHCPXg9XG4BsmOdy1ovNh3IsuPPUW3MWTGAkmZfR0ydZLo/5y6WFyOfYg515EP2TsQXi1YQIVGc2CjcqAd/Uv8AhAXckFyjBNONDFczgBBFh5sq0hORzIsM1wXQx5nKD/keQaPDpOp6Z47Jyppd9eyKX6lhPGHVf1GoQYLg6GoYADTj+X17JvDLP5PqvpbSOpKMOwB39TUiF1P3AkNrKvLcyc="
+#       on:
+#         branch: master
+#         tags: true
+#         condition: $TRAVIS_PYTHON_VERSION = "3.4"
