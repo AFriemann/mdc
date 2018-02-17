@@ -62,7 +62,7 @@ class MDCFormatter(logging.Formatter):
             log_record.update(
                 exception=dict(
                     name=record.exc_info[0].__name__,
-                    traceback=self.formatException(record.exc_info)
+                    stacktrace=self.formatException(record.exc_info)
                 )
             )
 
