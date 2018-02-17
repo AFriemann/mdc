@@ -43,6 +43,7 @@ By default log messages will include the following fields:
 
   {
     "message": "...",
+    "logger": "...",
     "timestamp": "2018-02-17T16:39:53.475377",
     "level": "DEBUG",
     "mdc": {},
