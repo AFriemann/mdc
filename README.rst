@@ -1,6 +1,9 @@
 MDC
 ===
 
+.. image:: https://travis-ci.org/AFriemann/mdc.svg?branch=master
+    :target: https://travis-ci.org/AFriemann/mdc
+
 This is thought to be an easy to use, import and go, library for Mapped Diagnostic Context style logging.
 
 Logs should include all necessary fields collected by the python logging library.
