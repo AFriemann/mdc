@@ -2,19 +2,26 @@
 
 import logging
 
-from mdc import mdc, with_mdc
+from mdc.logging import with_mdc, MDC, MDCHandler
+
+logging.root.addHandler(MDCHandler())
 
 
 def test_attaching_fields():
     assert logging._mdc is not None
 
-    with mdc(foo='bar'):
+    with MDC(foo='bar'):
         assert logging._mdc is not None
         assert logging._mdc.foo == 'bar'
 
-        logging.debug('abc', extra={'foo': 'bar'})
+        logging.debug('abc')
 
     assert not hasattr(logging._mdc, 'foo')
+
+    try:
+        raise RuntimeError('test')
+    except Exception as e:
+        logging.exception(e)
 
 
 def test_mdc_decorator():

@@ -1,6 +1,11 @@
 MDC
 ===
 
+This is thought to be an easy to use, import and go, library for Mapped Diagnostic Context style logging.
+
+Logs should include all necessary fields collected by the python logging library.
+Helper methods are provided to add context fields where required.
+
 Installation
 ------------
 
@@ -19,26 +24,57 @@ From source:
 Usage
 -----
 
+Add a handler to the root logger or set the base handler with *logging.basicConfig*:
+
 .. code:: python
 
   >>> import logging
-  >>> from mdc import MDCHandler, mdc
+  >>> from mdc.logging import MDCHandler
 
-  >>> logging.root.addHandler(MDCHandler())
+  >>> logging.basicConfig(level=logging.DEBUG, handlers=[MDCHandler()])
 
-  >>> logging.warning('foobar')
-  {"name": "root", "msg": "warning foobar", "args": [], "levelname": "WARNING", "levelno": 30, "pathname": "...", "filename": "...", "module": "test", "exc_info": null, "exc_text": null, "stack_info": null, "lineno": ..., "funcName": "...", "created": ..., "msecs": ..., "relativeCreated": ..., "thread": ..., "threadName": "MainThread", "processName": "MainProcess", "process": ..., "mdc": {}}
+By default log messages will include the following fields:
 
-  >>> with mdc(foo='bar'):
+.. code:: json
+
+
+  {
+    "message": "...",
+    "timestamp": "2018-02-17T16:39:53.475377",
+    "level": "DEBUG",
+    "mdc": {},
+    "python": {
+      "module": "...",
+      "function": "...",
+      "path": "...",
+      "line": ...,
+      "process": {
+        "name": "MainProcess",
+        "pid": 3724
+      },
+      "thread": {
+        "name": "MainThread",
+        "pid": 140050978850112
+      }
+    }
+  }
+
+You can use the provided decorator or contextmanager to add MDC fields:
+
+.. code:: python
+
+  >>> from mdc.logging import MDC, with_mdc
+
+  >>> with MDC(foo='bar'):
   ...     logging.warning('foobar')
-  {"name": "root", "msg": "warning foobar", "args": [], "levelname": "WARNING", "levelno": 30, "pathname": "...", "filename": "...", "module": "test", "exc_info": null, "exc_text": null, "stack_info": null, "lineno": ..., "funcName": "...", "created": ..., "msecs": ..., "relativeCreated": ..., "thread": ..., "threadName": "MainThread", "processName": "MainProcess", "process": ..., "mdc": {"foo": "bar"}}
 
-  >>> logging.warning('foobar')
-  {"name": "root", "msg": "warning foobar", "args": [], "levelname": "WARNING", "levelno": 30, "pathname": "...", "filename": "...", "module": "test", "exc_info": null, "exc_text": null, "stack_info": null, "lineno": ..., "funcName": "...", "created": ..., "msecs": ..., "relativeCreated": ..., "thread": ..., "threadName": "MainThread", "processName": "MainProcess", "process": ..., "mdc": {}}
-
+  >>> @with_mdc(test='123')
+  ... def foobar():
+  ...   pass
 
 Running tests:
 
 .. code:: bash
 
   $ tox
+
