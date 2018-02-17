@@ -53,7 +53,7 @@ class MDCFormatter(logging.Formatter):
                 ),
                 thread=dict(
                     name=record.threadName,
-                    pid=record.thread,
+                    tid=record.thread,
                 ),
             ),
         )

@@ -47,14 +47,14 @@ By default log messages will include the following fields:
       "module": "...",
       "function": "...",
       "path": "...",
-      "line": ...,
+      "line": 0,
       "process": {
         "name": "MainProcess",
         "pid": 3724
       },
       "thread": {
         "name": "MainThread",
-        "pid": 140050978850112
+        "tid": 140050978850112
       }
     }
   }
