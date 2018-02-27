@@ -4,7 +4,7 @@
 .. moduleauthor:: Aljosha Friemann a.friemann@automate.wtf
 """
 
-__version__ = '1.0.2'
+__version__ = '1.0.3'
 
 import json
 import logging
@@ -38,8 +38,14 @@ def with_mdc(**mdc_kwargs):
 
 class MDCFormatter(logging.Formatter):
     def format(self, record):
+        try:
+            message = record.getMessage()
+            raise Exception()
+        except Exception:
+            message = str(record.msg)
+
         log_record = dict(
-            message=record.getMessage(),
+            message=message,
             logger=record.name,
             timestamp=datetime.datetime.utcfromtimestamp(record.created).isoformat(),
             level=record.levelname,
