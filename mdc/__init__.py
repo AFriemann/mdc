@@ -4,7 +4,7 @@
 .. moduleauthor:: Aljosha Friemann a.friemann@automate.wtf
 """
 
-__version__ = '1.0.3'
+__version__ = '1.0.4'
 
 import json
 import logging
@@ -40,7 +40,6 @@ class MDCFormatter(logging.Formatter):
     def format(self, record):
         try:
             message = record.getMessage()
-            raise Exception()
         except Exception:
             message = str(record.msg)
 
