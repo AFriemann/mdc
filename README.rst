@@ -73,7 +73,7 @@ You can use the provided decorator or contextmanager to add MDC fields:
   ...     logging.warning('foobar')
 
   >>> @with_mdc(test='123')
-  ... def foobar():
+  ... def foobar(ctx):
   ...   pass
 
 Running tests:

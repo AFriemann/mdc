@@ -7,6 +7,7 @@
 __version__ = '1.0.5'
 
 import json
+import uuid
 import logging
 import datetime
 import threading
@@ -16,25 +17,39 @@ from contextlib import contextmanager
 logging._mdc = threading.local()
 
 
+def merge_dicts(*dicts):
+    result = {}
+
+    for d in [ d for d in dicts if d]:
+        result.update(**d)
+
+    return result
+
+
 @contextmanager
 def MDC(**kwargs):
-    for key, value in kwargs.items():
-        setattr(logging._mdc, key, value)
+    context_id = uuid.uuid4().hex
 
-    yield
+    if not hasattr(logging._mdc, context_id):
+        setattr(logging._mdc, context_id, threading.local())
+
+    context = getattr(logging._mdc, context_id)
+
+    for key, value in kwargs.items():
+        setattr(context, key, value)
+
+    yield context
 
     for key in kwargs:
-        try:
-            delattr(logging._mdc, key)
-        except AttributeError:
-            pass
+        delattr(logging._mdc, context_id)
+        del context
 
 
 def with_mdc(**mdc_kwargs):
     def wrapped(f):
         def mdc_function(*args, **kwargs):
-            with MDC(**mdc_kwargs):
-                return f(*args, **kwargs)
+            with MDC(**mdc_kwargs) as context:
+                return f(context, *args, **kwargs)
         return mdc_function
     return wrapped
 
@@ -46,12 +61,14 @@ class MDCFormatter(logging.Formatter):
         except Exception:
             message = str(record.msg)
 
+        fields = list(vars(c) for c in vars(logging._mdc).values())
+
         log_record = dict(
             message=message,
             logger=record.name,
             timestamp=datetime.datetime.utcfromtimestamp(record.created).isoformat(),
             level=record.levelname,
-            mdc=vars(logging._mdc),
+            mdc=merge_dicts(*fields),
             python=dict(
                 module=record.module,
                 function=record.funcName,

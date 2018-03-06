@@ -10,13 +10,15 @@ logging.root.addHandler(MDCHandler())
 def test_attaching_fields():
     assert logging._mdc is not None
 
-    with MDC(foo='bar'):
-        assert logging._mdc is not None
-        assert logging._mdc.foo == 'bar'
+    with MDC(foo='bar') as context:
+        assert context is not None
+        assert context.foo == 'bar'
 
         logging.debug('abc')
 
-    assert not hasattr(logging._mdc, 'foo')
+        with MDC(bar='foo') as context2:
+            assert context2 is not None
+            assert context2.bar == 'foo'
 
     try:
         raise RuntimeError('test')
@@ -26,10 +28,10 @@ def test_attaching_fields():
 
 def test_mdc_decorator():
     @with_mdc(baz='bar')
-    def foobar(x):
+    def foobar(ctx, x):
         logging.debug(x)
 
-        assert logging._mdc.baz == 'bar', logging._mdc.baz
+        assert ctx.baz == 'bar', ctx.baz
 
     foobar(1)
 
