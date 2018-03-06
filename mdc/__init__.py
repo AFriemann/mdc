@@ -24,7 +24,10 @@ def MDC(**kwargs):
     yield
 
     for key in kwargs:
-        delattr(logging._mdc, key)
+        try:
+            delattr(logging._mdc, key)
+        except AttributeError:
+            pass
 
 
 def with_mdc(**mdc_kwargs):
