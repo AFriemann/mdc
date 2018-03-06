@@ -4,7 +4,7 @@
 .. moduleauthor:: Aljosha Friemann a.friemann@automate.wtf
 """
 
-__version__ = '1.0.6'
+__version__ = '1.0.7'
 
 import json
 import uuid
@@ -14,7 +14,10 @@ import threading
 
 from contextlib import contextmanager
 
+
 logging._mdc = threading.local()
+
+LOGGER = logging.getLogger(__name__)
 
 
 def merge_dicts(*dicts):
@@ -31,6 +34,8 @@ def MDC(**kwargs):
     context_id = uuid.uuid4().hex
 
     if not hasattr(logging._mdc, context_id):
+        LOGGER.debug('creating context %s', context_id)
+
         setattr(logging._mdc, context_id, threading.local())
 
     context = getattr(logging._mdc, context_id)
@@ -41,8 +46,12 @@ def MDC(**kwargs):
     yield context
 
     for key in kwargs:
-        delattr(logging._mdc, context_id)
-        del context
+        LOGGER.debug('deleting context %s', context_id)
+
+        try:
+            delattr(logging._mdc, context_id)
+        except AttributeError:
+            pass
 
 
 def with_mdc(**mdc_kwargs):
