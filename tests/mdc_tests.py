@@ -4,7 +4,7 @@ import logging
 
 from mdc import with_mdc, MDC, MDCHandler
 
-logging.root.addHandler(MDCHandler())
+logging.root.addHandler(MDCHandler(extra=['foo']))
 
 
 def test_attaching_fields():
@@ -23,7 +23,7 @@ def test_attaching_fields():
     try:
         raise RuntimeError('test')
     except Exception as e:
-        logging.exception(e)
+        logging.exception(e, extra=dict(foo='oink'))
 
 
 def test_mdc_decorator():
