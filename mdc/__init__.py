@@ -37,7 +37,7 @@ def merge_dicts(*dicts):
 
 @contextmanager
 def ThreadMDC(**kwargs):
-    context_id = "ctxt-%s" % threading.get_ident()
+    context_id = "ctxt-%s" % threading.current_thread.ident
     if not hasattr(logging._mdc, context_id):
         setattr(logging._mdc, context_id, threading.local())
         created = True
