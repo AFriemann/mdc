@@ -29,10 +29,45 @@ logging._mdc = threading.local()
 def merge_dicts(*dicts):
     result = {}
 
-    for d in [ d for d in dicts if d]:
+    for d in [d for d in dicts if d]:
         result.update(**d)
 
     return result
+
+
+@contextmanager
+def ThreadMDC(**kwargs):
+    context_id = "ctxt-%s" % threading.current_thread().ident
+    if not hasattr(logging._mdc, context_id):
+        setattr(logging._mdc, context_id, threading.local())
+        created = True
+    else:
+        created = False
+
+    context = getattr(logging._mdc, context_id)
+
+    for key, value in kwargs.items():
+        setattr(context, key, value)
+
+    yield context
+
+    try:
+        if created:
+            delattr(logging._mdc, context_id)
+        else:
+            for key, value in kwargs.items():
+                delattr(context, key)
+    except AttributeError:
+        LOGGER.warning('context was already deleted %s', context_id)
+
+
+def with_thread_mdc(**mdc_kwargs):
+    def wrapped(f):
+        def mdc_function(*args, **kwargs):
+            with ThreadMDC(**mdc_kwargs) as context:
+                return f(context, *args, **kwargs)
+        return mdc_function
+    return wrapped
 
 
 @contextmanager
@@ -82,15 +117,18 @@ class MDCFormatter(logging.Formatter):
         except Exception:
             message = str(record.msg)
 
-        mdc_fields = merge_dicts(*list(vars(c) for c in vars(logging._mdc).values()))
-        extra_fields = { f: getattr(record, f) for f in self._extra if hasattr(record, f) }
+        mdc_fields = merge_dicts(*list(vars(c)
+                                       for c in vars(logging._mdc).values()))
+        extra_fields = {f: getattr(record, f)
+                        for f in self._extra if hasattr(record, f)}
 
         exc_info = record.exc_info
 
         log_record = dict(
             message=message,
             logger=record.name,
-            timestamp=datetime.datetime.utcfromtimestamp(record.created).isoformat(),
+            timestamp=datetime.datetime.utcfromtimestamp(
+                record.created).isoformat(),
             level=record.levelname,
             mdc=mdc_fields,
             extra=extra_fields,
@@ -120,6 +158,33 @@ class MDCFormatter(logging.Formatter):
             )
 
         return json.dumps(log_record)
+
+
+class Formatter(logging.Formatter):
+    def __init__(self, fmt=None, datefmt=None, extra=None, **kwargs):
+        super(Formatter, self).__init__(fmt=fmt, datefmt=datefmt, **kwargs)
+
+        self._extra = extra or []
+
+    def format(self, record):
+        try:
+            message = record.getMessage()
+        except Exception:
+            message = str(record.msg)
+
+
+        mdc_fields = merge_dicts(*list(vars(c)
+                                 for c in vars(logging._mdc).values()))
+        for k, v in mdc_fields.items():
+            setattr(record, '%s' % k, v)
+        extra_fields = {f: getattr(record, f)
+                        for f in self._extra if hasattr(record, f)}
+        setattr(record, 'extra', extra_fields)
+        try:
+            return super(Formatter, self).format(record)
+        except KeyError as e:
+            setattr(record, '%s' % e.args[0], None)
+            return self.format(record)
 
 
 class MDCHandler(logging.StreamHandler):
