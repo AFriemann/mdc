@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-import os
-
 try:
     from setuptools import setup, find_packages
 except ImportError:
@@ -9,14 +7,12 @@ except ImportError:
 
 from mdc import __version__
 
-
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname), 'r').read()
-
-
 if not __version__ or __version__ == '<VERSION>':
     raise RuntimeError("Package version not set!")
 
+with open("./README.rst", "r") as fh:
+    LONG_DESCRIPTION = fh.read()
+    
 setup(
     name="mdc",
     author="Aljosha Friemann",
@@ -27,7 +23,8 @@ setup(
     keywords=['logging', 'mdc'],
     version=__version__,
     license=read('LICENSE.txt'),
-    long_description=read('README.rst'),
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/x-rst",
     install_requires=[],
     classifiers=[],
     packages=find_packages(exclude=('test*', 'assets')),
