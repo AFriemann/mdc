@@ -6,10 +6,17 @@
 
 .. moduleauthor:: Aljosha Friemann a.friemann@automate.wtf
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
+from future import standard_library
+standard_library.install_aliases()
 import uuid
 import logging
 import threading
+import collections
 
 from contextlib import contextmanager
 
@@ -19,13 +26,20 @@ LOGGER.setLevel(logging.ERROR)
 logging._mdc = threading.local()
 
 
-@contextmanager
-def MDContext(**kwargs):
-    context_id = 'mdc-{thread}-{context}'.format(
-        thread=threading.current_thread().ident,
-        context=uuid.uuid4())
+def get_mdc_fields():
+    result = collections.defaultdict(None)
+    for c in (vars(ctx) for ctx in vars(logging._mdc).values()):
+        result.update(**c)
+    return result
 
-    LOGGER.debug('creating context %s', context_id)
+
+@contextmanager
+def new_log_context(**kwargs):
+    context_id = "mdc-{thread}-{context}".format(
+        thread=threading.current_thread().ident, context=uuid.uuid4()
+    )
+
+    LOGGER.debug("creating context %s", context_id)
 
     setattr(logging._mdc, context_id, threading.local())
 
@@ -34,13 +48,18 @@ def MDContext(**kwargs):
     for key, value in kwargs.items():
         setattr(context, key, value)
 
-    yield context
-
-    LOGGER.debug('deleting context %s', context_id)
-
     try:
-        delattr(logging._mdc, context_id)
-    except AttributeError:
-        LOGGER.warning('context was already deleted %s', context_id)
 
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4 fenc=utf-8
+        yield context
+
+    finally:
+
+        LOGGER.debug("deleting context %s", context_id)
+
+        try:
+            delattr(logging._mdc, context_id)
+        except AttributeError:
+            LOGGER.warning("context was already deleted %s", context_id)
+
+
+MDContext = new_log_context
