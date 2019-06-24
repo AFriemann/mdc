@@ -43,16 +43,12 @@ def test_generator():
     @log_value(inside=True)
     def my_generator():
         for i in range(5):
-            record = logging.makeLogRecord({})
-
-            assert hasattr(record, "inside")
-            assert record.inside == True
-
+            assert_context_has(inside=True)
             yield i
 
-    with new_log_context(inside=False) as ctx:
+    with new_log_context(inside=False):
         for _ in my_generator():
-            assert ctx.inside == False
+            assert_context_has(inside=False)
 
 
 def test_log_value():
