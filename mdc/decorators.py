@@ -14,6 +14,11 @@ from mdc.context import new_log_context
 
 def has_argument(func, arg):
 
+    """
+    Backwards-compatible method to check if a function has an actual argument (not an *args or **kwargs)
+    of the name :param arg:
+    """
+
     try:
         return arg in inspect.signature(func).parameters
     except AttributeError:
@@ -25,10 +30,29 @@ def has_argument(func, arg):
     except AttributeError:
         pass
 
+    return arg in inspect.getargspec(func).args
+
+
+def bind_argument(func, arg, args, kwargs):
+
+    """
+    Backwards-compatible method to get the value of argument :param arg:
+    when function :param func: is called as func(*args, **kwargs)
+    """
+
+    if not has_argument(func, arg):
+        raise ValueError("Function {} has no argument named {}".format(func, arg))
+
     try:
-        return arg in inspect.getargspec(func).args
-    except:
-        raise
+        signature = inspect.signature(func)
+        bound = signature.bind(*args, **kwargs)
+        bound.apply_defaults()
+        return bound.arguments[arg]
+    except AttributeError:
+        pass
+
+    bound = inspect.getcallargs(func, *args, **kwargs)
+    return bound[arg]
 
 
 def wrap_function_or_generator(func, pass_context_as=None, context_dict=None):
@@ -57,7 +81,7 @@ def wrap_function_or_generator(func, pass_context_as=None, context_dict=None):
             to_send = None
             generator = func(*args, **kwargs)
             with new_log_context(**context_dict) as context:
-                to_send = yield generator.send(to_send)
+                to_send = (yield generator.send(to_send))
 
     else:
 
@@ -79,7 +103,7 @@ def log_value(**mdc_kwargs):
     """Adds constant values to the logging context"""
 
     def decorator(func):
-        return wrap_function_or_generator(f, context_dict=mdc_kwargs)
+        return wrap_function_or_generator(func, context_dict=mdc_kwargs)
 
     return decorator
 
@@ -131,12 +155,10 @@ def log_argument(argument, destination="", formatter=None):
         @wraps(func)
         def wrapper(*args, **kwargs):
 
-            signature = inspect.signature(func)
-            bound = signature.bind(*args, **kwargs)
-            bound.apply_defaults()
+            raw_argument = bind_argument(func, argument, args, kwargs)
 
             return wrap_function_or_generator(
-                func, context_dict={destination: formatter(bound.arguments[argument])}
+                func, context_dict={destination: formatter(raw_argument)}
             )(*args, **kwargs)
 
         return wrapper
