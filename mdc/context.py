@@ -32,17 +32,15 @@ start = time.time()
 def get_mdc_fields():
     result = collections.defaultdict(None)
     contexts = vars(logging._mdc)
-    for context_id in sorted(contexts):
+    for context_id in sorted(contexts, key=lambda x: contexts[x].__creation_time__):
         result.update(**vars(contexts[context_id]))
     return result
 
 
 @contextmanager
 def new_log_context(**kwargs):
-    context_id = "mdc-{delta}-{thread}-{context}".format(
-        delta=time.time() - start,
-        thread=threading.current_thread().ident,
-        context=uuid.uuid4(),
+    context_id = "mdc-{thread}-{context}".format(
+        thread=threading.current_thread().ident, context=uuid.uuid4()
     )
 
     LOGGER.debug("creating context %s", context_id)
@@ -50,6 +48,8 @@ def new_log_context(**kwargs):
     setattr(logging._mdc, context_id, threading.local())
 
     context = getattr(logging._mdc, context_id)
+
+    context.__creation_time__ = time.time() - start
 
     for key, value in kwargs.items():
         setattr(context, key, value)
