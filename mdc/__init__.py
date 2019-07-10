@@ -28,21 +28,18 @@ LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
 
 
-if sys.version_info < (3, 2):
-    old_factory = logging.LogRecord
-else:
-    old_factory = logging.getLogRecordFactory()
+def patch(old_factory):
+    def record_factory(*args, **kwargs):
+        record = old_factory(*args, **kwargs)
+        for key, value in get_mdc_fields().items():
+            setattr(record, key, value)
+        return record
+
+    return record_factory
 
 
-def record_factory(*args, **kwargs):
-    record = old_factory(*args, **kwargs)
-    for key, value in get_mdc_fields().items():
-        setattr(record, key, value)
-    return record
-
-
-if sys.version_info < (3, 2):
-    logging.LogRecord = record_factory
-else:
-    logging.setLogRecordFactory(record_factory)
+try:
+    logging.setLogRecordFactory(patch(logging.getLogRecordFactory()))
+except AttributeError:
+    logging.LogRecord = patch(logging.LogRecord)
 
