@@ -1,6 +1,6 @@
 import logging
 
-from mdc import with_mdc, MDC, log_value, new_log_context, log_argument
+from mdc import with_mdc, MDC, log_value, new_log_context, log_argument, pass_context
 
 
 def assert_context_has(**kwargs):
@@ -93,6 +93,26 @@ def test_log_argument_with_formatter():
     @log_argument("food", formatter=str.upper)
     def eat(food):
         assert_context_has(food=str.upper(food))
+
+    for food in ["spam", "ham", "eggs"]:
+        eat(food)
+
+
+def test_pass_context_in_args():
+    @pass_context("ctx")
+    def eat(food, ctx):
+        ctx.food = food
+        assert_context_has(food=food)
+
+    for food in ["spam", "ham", "eggs"]:
+        eat(food)
+
+
+def test_pass_context_in_kwargs():
+    @pass_context("ctx")
+    def eat(food, ctx=None):
+        ctx.food = food
+        assert_context_has(food=food)
 
     for food in ["spam", "ham", "eggs"]:
         eat(food)
