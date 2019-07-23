@@ -1,4 +1,6 @@
+build
 dist
+tags
 __pycache__
 *.egg-info
 *.pyc
