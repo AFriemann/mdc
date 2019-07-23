@@ -9,6 +9,16 @@ This is thought to be an easy to use, import and go, library for Mapped Diagnost
 Logs should include all necessary fields collected by the python logging library.
 Helper methods are provided to add context fields where required.
 
+**NOTE** `1.2.0`: recent changes will result in changed json output if using the `MDCHandler` class:
+
+```
+>>> with MDC(foobar="baz"):
+...   logging.warning("test") 
+{ "message": "test", "foobar": "baz" }
+```
+
+this is a temporary solution to avoid breaking existing APIs. Please excuse any issues this might cause. In the future output handling should be done on the client side to avoid any possible breakage. The MDCHandler class will eventually be removed.
+
 Installation
 ------------
 
