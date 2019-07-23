@@ -3,47 +3,42 @@
 .. module: mdc
 .. moduleauthor:: Aljosha Friemann a.friemann@automate.wtf
 """
+from __future__ import unicode_literals
+from __future__ import print_function
+from __future__ import division
+from __future__ import absolute_import
 
-__version__ = '1.1.0.post1'
+from future import standard_library
 
+standard_library.install_aliases()
+
+import sys
 import logging
+import inspect
+from functools import wraps
 
-from mdc.formatter import MDCFormatter, JSONMDCFormatter
-from mdc.context import MDContext
+from mdc.context import *
+from mdc.decorators import *
 
-MDC = MDContext
+MDContext = new_log_context
+MDC = new_log_context
 
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
 
 
-def merge_dicts(*dicts):
-    result = {}
+def patch(old_factory):
+    def record_factory(*args, **kwargs):
+        record = old_factory(*args, **kwargs)
+        for key, value in get_mdc_fields().items():
+            setattr(record, key, value)
+        return record
 
-    for d in [ d for d in dicts if d]:
-        result.update(**d)
-
-    return result
-
-
-def with_mdc(**mdc_kwargs):
-    def wrapped(f):
-        def mdc_function(*args, **kwargs):
-            with MDC(**mdc_kwargs) as context:
-                return f(context, *args, **kwargs)
-        return mdc_function
-    return wrapped
+    return record_factory
 
 
-class MDCHandler(logging.StreamHandler):
-    def __init__(self, stream=None, extra=None, json=True, fmt=None, **kwargs):
-        super(MDCHandler, self).__init__(stream)
+try:
+    logging.setLogRecordFactory(patch(logging.getLogRecordFactory()))
+except AttributeError:
+    logging.LogRecord = patch(logging.LogRecord)
 
-        if json:
-            formatter = JSONMDCFormatter(extra=extra, **kwargs)
-        else:
-            formatter = MDCFormatter(extra=extra, fmt=fmt, **kwargs)
-
-        self.setFormatter(formatter)
-
-# vim: tabstop=8 expandtab shiftwidth=4 softtabstop=4 fenc=utf-8
