@@ -46,6 +46,8 @@ def test_generator():
             assert_context_has(inside=True)
             yield i
 
+    assert list(my_generator()) == list(range(5))
+
     with new_log_context(inside=False):
         for _ in my_generator():
             assert_context_has(inside=False)

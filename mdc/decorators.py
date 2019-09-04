@@ -81,10 +81,14 @@ def wrap_function_or_generator(func, pass_context_as=None, context_dict=None):
             to_send = None
             generator = func(*args, **kwargs)
 
-            with new_log_context(**context_dict) as context:
-                to_yield = generator.send(to_send)
-
-            to_send = yield to_yield
+            while True:
+                try:
+                    with new_log_context(**context_dict) as context:
+                        to_yield = generator.send(to_send)
+                except StopIteration:
+                    return
+                else:
+                    to_send = yield to_yield
 
     else:
 
