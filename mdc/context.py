@@ -43,7 +43,7 @@ def get_mdc_fields():
 
 @contextmanager
 def new_log_context(**kwargs):
-    context_id = "mdc-{context}".format(context=uuid.uuid4())
+    context_id = str(uuid.uuid4())
 
     LOGGER.debug("creating context %s", context_id)
 
