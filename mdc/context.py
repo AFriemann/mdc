@@ -11,13 +11,14 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
+import contextvars
+
 from future import standard_library
 
 standard_library.install_aliases()
 import time
 import uuid
 import logging
-import threading
 import collections
 
 from contextlib import contextmanager
@@ -25,45 +26,46 @@ from contextlib import contextmanager
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
 
-logging._mdc = threading.local()
+CREATION_TIME_FIELD = "__creation_time__"
+
+logging._mdc = contextvars.ContextVar('mdc', default={})
 start = time.time()
 
 
 def get_mdc_fields():
     result = collections.defaultdict(None)
-    contexts = vars(logging._mdc)
-    for context_id in sorted(contexts, key=lambda x: contexts[x].__creation_time__):
-        result.update(**vars(contexts[context_id]))
+    contexts = logging._mdc.get()
+    for context_id, values in sorted(contexts.items(), key=lambda kv: kv[1][CREATION_TIME_FIELD]):
+        actual_context = {k: values[k] for k in values if k != CREATION_TIME_FIELD}
+        result.update(**actual_context)
     return result
 
 
 @contextmanager
 def new_log_context(**kwargs):
-    context_id = "mdc-{thread}-{context}".format(
-        thread=threading.current_thread().ident, context=uuid.uuid4()
-    )
+    context_id = "mdc-{context}".format(context=uuid.uuid4())
 
     LOGGER.debug("creating context %s", context_id)
 
-    setattr(logging._mdc, context_id, threading.local())
-
-    context = getattr(logging._mdc, context_id)
-
-    context.__creation_time__ = time.time() - start
+    context = logging._mdc.get()
+    current_context = {}
+    current_context[CREATION_TIME_FIELD] = time.time() - start
 
     for key, value in kwargs.items():
-        setattr(context, key, value)
+        current_context[key] = value
+
+    context[context_id] = current_context
+    logging._mdc.set(context)
 
     try:
-
-        yield context
-
+        print(current_context)
+        yield current_context
     finally:
-
         LOGGER.debug("deleting context %s", context_id)
 
         try:
-            delattr(logging._mdc, context_id)
+            context = logging._mdc.get()
+            del context[context_id]
         except AttributeError:
             LOGGER.warning("context was already deleted %s", context_id)
 

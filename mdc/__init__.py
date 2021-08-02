@@ -6,12 +6,6 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-import inspect
-import logging
-import sys
-from functools import wraps
-
-from future import standard_library
 from mdc.context import *
 from mdc.decorators import *
 from pythonjsonlogger import jsonlogger
