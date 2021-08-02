@@ -26,7 +26,7 @@ from contextlib import contextmanager
 LOGGER = logging.getLogger(__name__)
 LOGGER.setLevel(logging.ERROR)
 
-CREATION_TIME_FIELD = "__creation_time__"
+CREATION_TIME_KEY = "__creation_time__"
 
 logging._mdc = contextvars.ContextVar('mdc', default={})
 start = time.time()
@@ -35,8 +35,8 @@ start = time.time()
 def get_mdc_fields():
     result = collections.defaultdict(None)
     contexts = logging._mdc.get()
-    for context_id, values in sorted(contexts.items(), key=lambda kv: kv[1][CREATION_TIME_FIELD]):
-        actual_context = {k: values[k] for k in values if k != CREATION_TIME_FIELD}
+    for context_id, values in sorted(contexts.items(), key=lambda kv: kv[1][CREATION_TIME_KEY]):
+        actual_context = {k: values[k] for k in values if k != CREATION_TIME_KEY}
         result.update(**actual_context)
     return result
 
@@ -49,7 +49,7 @@ def new_log_context(**kwargs):
 
     context = logging._mdc.get()
     current_context = {}
-    current_context[CREATION_TIME_FIELD] = time.time() - start
+    current_context[CREATION_TIME_KEY] = time.time() - start
 
     for key, value in kwargs.items():
         current_context[key] = value
