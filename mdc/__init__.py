@@ -11,12 +11,9 @@ import logging
 import sys
 from functools import wraps
 
-from future import standard_library
 from mdc.context import *
 from mdc.decorators import *
 from pythonjsonlogger import jsonlogger
-
-standard_library.install_aliases()
 
 
 MDContext = new_log_context
